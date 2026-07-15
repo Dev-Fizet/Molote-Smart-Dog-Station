@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DogStation Control Center</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 { color: #ff9800; }
+        .section {
+            background-color: #1e1e1e;
+            padding: 15px;
+            margin: 15px auto;
+            border-radius: 10px;
+            max-width: 400px;
+        }
+        button {
+            background-color: #333;
+            color: white;
+            border: 2px solid #ff9800;
+            padding: 12px 24px;
+            font-size: 16px;
+            margin: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 80%;
+            transition: 0.2s;
+        }
+        button:active {
+            background-color: #ff9800;
+            color: black;
+        }
+        .btn-danger { border-color: #f44336; }
+        .btn-danger:active { background-color: #f44336; }
+    </style>
+</head>
+<body>
+
+    <h1>🐾 DogStation Control</h1>
+
+    <!-- Sección de Pantalla -->
+    <div class="section">
+        <h3>📺 Control de Pantalla</h3>
+        <button onclick="enviarAccion('/api/pantalla', {accion: 'encender'})">Encender Pantalla</button>
+        <button class="btn-danger" onclick="enviarAccion('/api/pantalla', {accion: 'apagar'})">Apagar Pantalla</button>
+    </div>
+
+    <!-- Sección de Canales -->
+    <div class="section">
+        <h3>🎥 Cambiar de Canal</h3>
+        <button onclick="enviarAccion('/api/canal', {canal: '1'})">Canal 1: Ardillas</button>
+        <button onclick="enviarAccion('/api/canal', {canal: '2'})">Canal 2: Pajaritos</button>
+        <button onclick="enviarAccion('/api/canal', {canal: '3'})">Canal 3: YouTube Live</button>
+    </div>
+
+    <!-- Sección Dispensadora -->
+    <div class="section" style="border: 2px solid #4caf50;">
+        <h3 style="color: #4caf50;">🍖 Premios</h3>
+        <button style="border-color: #4caf50;" onclick="enviarAccion('/api/premio', {})">Dispenser Premio Ahora</button>
+    </div>
+
+    <script>
+        function enviarAccion(url, data) {
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(data => alert(data.status))
+            .catch(err => alert("Error: " + err));
+        }
+    </script>
+</body>
+</html>
