@@ -3,78 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DogStation Control Center</title>
+    <title>Control de Canales - Dog Station</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #121212;
             color: #ffffff;
-            text-align: center;
-            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
         }
-        h1 { color: #ff9800; }
-        .section {
+        h1 {
+            color: #ff9f43;
+            margin-bottom: 5px;
+        }
+        p {
+            color: #a0a0a0;
+            margin-bottom: 30px;
+        }
+        .container {
+            text-align: center;
             background-color: #1e1e1e;
-            padding: 15px;
-            margin: 15px auto;
-            border-radius: 10px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            width: 90%;
             max-width: 400px;
         }
-        button {
-            background-color: #333;
-            color: white;
-            border: 2px solid #ff9800;
-            padding: 12px 24px;
-            font-size: 16px;
-            margin: 8px;
-            border-radius: 5px;
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 12px 0;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
             cursor: pointer;
-            width: 80%;
-            transition: 0.2s;
+            transition: all 0.2s ease-in-out;
         }
-        button:active {
-            background-color: #ff9800;
-            color: black;
+        .btn-canal {
+            background-color: #ff9f43;
+            color: #121212;
         }
-        .btn-danger { border-color: #f44336; }
-        .btn-danger:active { background-color: #f44336; }
+        .btn-canal:active {
+            background-color: #f39c12;
+            transform: scale(0.98);
+        }
+        .btn-apagar {
+            background-color: #ee5253;
+            color: white;
+        }
+        .btn-apagar:active {
+            background-color: #d63031;
+            transform: scale(0.98);
+        }
+        .btn-encender {
+            background-color: #10ac84;
+            color: white;
+        }
+        .btn-encender:active {
+            background-color: #0f9675;
+            transform: scale(0.98);
+        }
+        .info-canal {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #2e2e2e;
+            border-radius: 6px;
+            border-left: 4px solid #ff9f43;
+            font-size: 14px;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-    <h1>🐾 DogStation Control</h1>
+    <div class="container">
+        <h1>Dog TV Station 🐶📺</h1>
+        <p>Control de canales en vivo</p>
 
-    <!-- Sección de Pantalla -->
-    <div class="section">
-        <h3>📺 Control de Pantalla</h3>
-        <button onclick="enviarAccion('/api/pantalla', {accion: 'encender'})">Encender Pantalla</button>
-        <button class="btn-danger" onclick="enviarAccion('/api/pantalla', {accion: 'apagar'})">Apagar Pantalla</button>
-    </div>
+        <!-- Botón de Siguiente Canal -->
+        <button class="btn btn-canal" onclick="cambiarCanal()">Siguiente Canal ➡️</button>
+        
+        <!-- Estado del canal en reproducción -->
+        <div id="infoCanal" class="info-canal">
+            Reproduciendo: <strong id="nombreCanal">-</strong>
+        </div>
 
-    <!-- Sección de Canales -->
-    <div class="section">
-        <h3>🎥 Cambiar de Canal</h3>
-        <button onclick="enviarAccion('/api/canal', {canal: '1'})">Canal 1: Ardillas</button>
-        <button onclick="enviarAccion('/api/canal', {canal: '2'})">Canal 2: Pajaritos</button>
-        <button onclick="enviarAccion('/api/canal', {canal: '3'})">Canal 3: YouTube Live</button>
-    </div>
+        <hr style="border-color: #333; margin: 25px 0;">
 
-    <!-- Sección Dispensadora -->
-    <div class="section" style="border: 2px solid #4caf50;">
-        <h3 style="color: #4caf50;">🍖 Premios</h3>
-        <button style="border-color: #4caf50;" onclick="enviarAccion('/api/premio', {})">Dispenser Premio Ahora</button>
+        <!-- Control de pantalla -->
+        <button class="btn btn-encender" onclick="enviarAccion('/api/encender_pantalla')">Encender Pantalla 💡</button>
+        <button class="btn btn-apagar" onclick="enviarAccion('/api/apagar_pantalla')">Apagar Pantalla 😴</button>
     </div>
 
     <script>
-        function enviarAccion(url, data) {
-            fetch(url, {
+        function cambiarCanal() {
+            fetch('/api/siguiente_canal', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                headers: { 'Content-Type': 'application/json' }
             })
             .then(res => res.json())
-            .then(data => alert(data.status))
-            .catch(err => alert("Error: " + err));
+            .then(data => {
+                if(data.canal_nombre) {
+                    const infoDiv = document.getElementById('infoCanal');
+                    const nombreSpan = document.getElementById('nombreCanal');
+                    infoDiv.style.display = 'block';
+                    nombreSpan.textContent = `${data.canal_nombre} (${data.index}/${data.total})`;
+                }
+            })
+            .catch(err => console.error("Error al cambiar canal:", err));
+        }
+
+        function enviarAccion(ruta) {
+            fetch(ruta, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log(data.status);
+                // Si apagamos la pantalla, ocultamos el aviso del canal activo
+                if (ruta.includes('apagar_pantalla')) {
+                    document.getElementById('infoCanal').style.display = 'none';
+                }
+            })
+            .catch(err => console.error("Error en acción:", err));
         }
     </script>
 </body>
