@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Canales - Dog Station</title>
+    <title>Control Remoto - Dog Station</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -13,8 +13,10 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
         h1 {
             color: #ff9f43;
@@ -22,7 +24,7 @@
         }
         p {
             color: #a0a0a0;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         .container {
             text-align: center;
@@ -30,45 +32,38 @@
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            width: 90%;
+            width: 100%;
             max-width: 400px;
+            box-sizing: border-box;
         }
         .btn {
             display: block;
             width: 100%;
             padding: 15px;
-            margin: 12px 0;
-            font-size: 18px;
+            margin: 10px 0;
+            font-size: 16px;
             font-weight: bold;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease-in-out;
+            box-sizing: border-box;
         }
-        .btn-canal {
-            background-color: #ff9f43;
-            color: #121212;
-        }
-        .btn-canal:active {
-            background-color: #f39c12;
-            transform: scale(0.98);
-        }
-        .btn-apagar {
-            background-color: #ee5253;
-            color: white;
-        }
-        .btn-apagar:active {
-            background-color: #d63031;
-            transform: scale(0.98);
-        }
-        .btn-encender {
-            background-color: #10ac84;
-            color: white;
-        }
-        .btn-encender:active {
-            background-color: #0f9675;
-            transform: scale(0.98);
-        }
+        .btn-canal { background-color: #ff9f43; color: #121212; }
+        .btn-canal:active { background-color: #f39c12; transform: scale(0.98); }
+        
+        .btn-yt { background-color: #ff4757; color: white; }
+        .btn-yt:active { background-color: #ff2a3a; transform: scale(0.98); }
+
+        .btn-lista { background-color: #54a0ff; color: white; text-decoration: none; display: block; line-height: 20px;}
+        .btn-lista:active { background-color: #2e86de; transform: scale(0.98); }
+
+        .btn-apagar { background-color: #ee5253; color: white; }
+        .btn-apagar:active { background-color: #d63031; transform: scale(0.98); }
+        
+        .btn-encender { background-color: #10ac84; color: white; }
+        .btn-encender:active { background-color: #0f9675; transform: scale(0.98); }
+
         .info-canal {
             margin-top: 15px;
             padding: 10px;
@@ -78,20 +73,62 @@
             font-size: 14px;
             display: none;
         }
+        
+        /* Sección de Pegar Enlace */
+        .seccion-enlace {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .seccion-enlace label {
+            font-size: 14px;
+            color: #a0a0a0;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .input-url {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background-color: #2e2e2e;
+            color: white;
+            font-size: 14px;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+        }
+        .btn-enviar-link {
+            background-color: #2ed573;
+            color: white;
+            padding: 10px;
+            font-size: 14px;
+        }
+        .btn-enviar-link:active { background-color: #26af5f; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <h1>Dog TV Station 🐶📺</h1>
-        <p>Control de canales en vivo</p>
+        <p>Panel de Control Inteligente</p>
 
         <!-- Botón de Siguiente Canal -->
         <button class="btn btn-canal" onclick="cambiarCanal()">Siguiente Canal ➡️</button>
         
-        <!-- Estado del canal en reproducción -->
+        <!-- Botón YouTube Kiosco -->
+        <button class="btn btn-yt" onclick="enviarAccion('/api/youtube_kiosk')">Abrir YouTube (Edge Kiosco) 🟥</button>
+        
+        <!-- Enlace a la Lista de Canales -->
+        <a href="/lista" class="btn btn-lista">Ver Lista de Canales 📋</a>
+        
         <div id="infoCanal" class="info-canal">
             Reproduciendo: <strong id="nombreCanal">-</strong>
+        </div>
+
+        <!-- Sección de Pegar Enlace -->
+        <div class="seccion-enlace">
+            <label for="urlInput">Enviar enlace personalizado (YouTube/Web/M3U8):</label>
+            <input type="text" id="urlInput" class="input-url" placeholder="Pega el link aquí..." />
+            <button class="btn btn-enviar-link" onclick="enviarEnlace()">Reproducir Enlace en PC 🚀</button>
         </div>
 
         <hr style="border-color: #333; margin: 25px 0;">
@@ -110,13 +147,35 @@
             .then(res => res.json())
             .then(data => {
                 if(data.canal_nombre) {
-                    const infoDiv = document.getElementById('infoCanal');
-                    const nombreSpan = document.getElementById('nombreCanal');
-                    infoDiv.style.display = 'block';
-                    nombreSpan.textContent = `${data.canal_nombre} (${data.index}/${data.total})`;
+                    mostrarAvisoCanal(data.canal_nombre, data.index, data.total);
                 }
             })
             .catch(err => console.error("Error al cambiar canal:", err));
+        }
+
+        function enviarEnlace() {
+            const urlValue = document.getElementById('urlInput').value;
+            if(!urlValue) return alert("Por favor pega un enlace primero");
+
+            fetch('/api/reproducir_enlace', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: urlValue })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.status);
+                document.getElementById('urlInput').value = ''; // Limpiar input
+                document.getElementById('infoCanal').style.display = 'none';
+            })
+            .catch(err => console.error("Error al enviar enlace:", err));
+        }
+
+        function mostrarAvisoCanal(nombre, index, total) {
+            const infoDiv = document.getElementById('infoCanal');
+            const nombreSpan = document.getElementById('nombreCanal');
+            infoDiv.style.display = 'block';
+            nombreSpan.textContent = `${nombre} (${index}/${total})`;
         }
 
         function enviarAccion(ruta) {
@@ -127,8 +186,7 @@
             .then(res => res.json())
             .then(data => {
                 console.log(data.status);
-                // Si apagamos la pantalla, ocultamos el aviso del canal activo
-                if (ruta.includes('apagar_pantalla')) {
+                if (ruta.includes('apagar_pantalla') || ruta.includes('youtube_kiosk')) {
                     document.getElementById('infoCanal').style.display = 'none';
                 }
             })

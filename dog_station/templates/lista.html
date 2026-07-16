@@ -1,0 +1,176 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Contenido - Dog Station</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #ff9f43;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .btn-volver {
+            display: inline-block;
+            background-color: #555;
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .btn-volver:hover {
+            background-color: #666;
+        }
+        .seccion-titulo {
+            color: #ff9f43;
+            border-bottom: 2px solid #ff9f43;
+            padding-bottom: 5px;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .lista-contenido {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 40vh;
+            overflow-y: auto;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background-color: #151515;
+        }
+        .item-clic {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .item-clic:last-child {
+            border-bottom: none;
+        }
+        .item-clic:hover {
+            background-color: #2d2d2d;
+        }
+        .item-clic:active {
+            background-color: #ff9f43;
+            color: #121212;
+        }
+        .item-nombre {
+            font-weight: 500;
+            word-break: break-word;
+        }
+        .icon-play {
+            font-size: 14px;
+            font-weight: bold;
+            color: #ff9f43;
+        }
+        .item-clic:active .icon-play {
+            color: #121212;
+        }
+        /* Scrollbar */
+        .lista-contenido::-webkit-scrollbar {
+            width: 8px;
+        }
+        .lista-contenido::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        .lista-contenido::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <a href="/" class="btn-volver">Volver al Control</a>
+        <h1>Lista de Contenido</h1>
+
+        <!-- SECCIÓN YOUTUBE -->
+        <div class="seccion-titulo">Videos de YouTube</div>
+        <ul class="lista-contenido">
+            {% for video in videos_yt %}
+                <li class="item-clic" onclick="reproducirEnlace('{{ video.url }}', '{{ video.nombre }}')">
+                    <span class="item-nombre">{{ loop.index }}. {{ video.nombre }}</span>
+                    <span class="icon-play">PLAY</span>
+                </li>
+            {% else %}
+                <li style="padding: 20px; text-align: center; color: #888; font-size: 14px;">
+                    Crea un archivo .txt en la carpeta "youtube_list" para ver tus videos aqui.
+                </li>
+            {% endfor %}
+        </ul>
+
+        <!-- SECCIÓN CANALES M3U -->
+        <div class="seccion-titulo">Canales de TV (M3U)</div>
+        <ul class="lista-contenido">
+            {% for canal in canales %}
+                <li class="item-clic" onclick="reproducirCanal({{ loop.index0 }}, '{{ canal.nombre }}')">
+                    <span class="item-nombre">{{ loop.index }}. {{ canal.nombre }}</span>
+                    <span class="icon-play">VER TV</span>
+                </li>
+            {% else %}
+                <li style="padding: 20px; text-align: center; color: #888; font-size: 14px;">
+                    No hay canales en "m3u_list".
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <script>
+        function reproducirCanal(index, nombre) {
+            fetch('/api/reproducir_especifico', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ index: index })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(`Sintonizando TV: ${nombre}`);
+            })
+            .catch(err => console.error("Error:", err));
+        }
+
+        function reproducirEnlace(url, nombre) {
+            fetch('/api/reproducir_enlace', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(`Reproduciendo Video: ${nombre}`);
+            })
+            .catch(err => console.error("Error:", err));
+        }
+    </script>
+</body>
+</html>
